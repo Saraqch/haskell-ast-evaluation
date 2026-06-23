@@ -1,0 +1,21 @@
+cabal-version:      3.0
+name:               haskell-src-exts-prueba
+version:            0.1.0.0
+synopsis:           Prueba de obtención de AST con haskell-src-exts
+description:
+  Proyecto de prueba para el análisis técnico de la librería
+  haskell-src-exts como herramienta para obtener el árbol de
+  análisis sintáctico de código Haskell.
+author:             Saraqch
+maintainer:         quispechoquesara@gmail.com
+
+executable haskell-src-exts-prueba
+    main-is:          Main.hs
+    hs-source-dirs:   src
+    default-language: Haskell2010
+    build-depends:
+        directory ^>=1.3.8.5,
+        base          >= 4.14 && < 5,
+        haskell-src-exts == 1.23.1
+         
+
