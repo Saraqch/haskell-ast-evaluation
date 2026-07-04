@@ -33,7 +33,7 @@ main = do
   args <- getArgs
   case args of
     [path] -> processFile path
-    _ -> putStrLn "Usage: cabal run ghc-lib-parser-prueba -- path/to/file.hs"
+    _ -> putStrLn "Usage: cabal run ghc-lib-parser-test -- path/to/file.hs"
 
 processFile :: FilePath -> IO ()
 processFile path = do

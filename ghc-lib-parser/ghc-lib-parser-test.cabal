@@ -1,0 +1,19 @@
+cabal-version:      3.0
+name:               ghc-lib-parser-test
+version:            0.1.0.0
+synopsis:           AST extraction test with ghc-lib-parser (HLS infrastructure)
+description:
+  Test project for the technical analysis of ghc-lib-parser,
+  the parsing library used internally by haskell-language-server.
+  Demonstrates AST extraction using the real GHC parser.
+author:             Saraqch
+maintainer:         quispechoquesara@gmail.com
+
+executable ghc-lib-parser-test
+    main-is:          Main.hs
+    hs-source-dirs:   src
+    default-language: Haskell2010
+    build-depends:
+        base              >= 4.14 && < 5,
+        directory         >= 1.3,
+        ghc-lib-parser    == 9.6.7.20250325
