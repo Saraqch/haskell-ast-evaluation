@@ -58,7 +58,7 @@ cabal update
 
 **3. Build and run** _(the first build takes several minutes: ghc-lib-parser is large)_
 ```bash
-cabal run ghc-lib-parser-prueba -- ./Ejemplo.hs
+cabal run ghc-lib-parser-prueba -- ./src/Example.hs
 ```
 
 > **Note:** `ghc-lib-parser` is about ~150 MB of source code. The first build
