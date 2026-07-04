@@ -1,81 +1,81 @@
-# Prueba: ghc-lib-parser (infraestructura de HLS)
+# Test: ghc-lib-parser
 
-## Información de la Biblioteca
+## Library Information
 
-| Campo | Detalle |
+| Field | Detail |
 |---|---|
-| **Nombre** | `ghc-lib-parser` |
-| **Versión probada** | `9.6.7.20250325` |
+| **Name** | `ghc-lib-parser` |
+| **Tested version** | `9.6.7.20250325` |
 | **Hackage** | https://hackage.haskell.org/package/ghc-lib-parser |
-| **Repositorio fuente** | https://github.com/digital-asset/ghc-lib |
-| **Última prueba** | Junio 2026 |
-| **Estado** | Funcional |
+| **Source repository** | https://github.com/digital-asset/ghc-lib |
+| **Last tested** | June 2026 |
+| **Status** | Functional |
 
-## ¿Qué hace esta biblioteca?
+## What does this library do?
 
-`ghc-lib-parser` es el subconjunto del API de GHC necesario para parsear código Haskell.
-Usa el **parser real de GHC** (no uno alternativo como `haskell-src-exts`), lo que
-garantiza compatibilidad total con todas las extensiones del lenguaje.
+`ghc-lib-parser` is the subset of the GHC API required to parse Haskell code.
+It uses the **real GHC parser** (not an alternative one such as `haskell-src-exts`),
+which guarantees full compatibility with all language extensions.
 
-Módulos utilizados en esta prueba:
+Modules used in this test:
 
-- `GHC.Parser` — función `parseModule`, el punto de entrada del parser
-- `GHC.Parser.Lexer` — mónada `P`, estado del parser y resultado (`ParseResult`)
-- `GHC.Data.StringBuffer` — convierte un `String` al buffer que consume el parser
-- `GHC.Types.SrcLoc` — ubicaciones en el código fuente
-- `GHC.Hs` — tipos del AST de GHC en fase de parsing (`GhcPs`)
-- `GHC.Utils.Outputable` — pretty-printing del AST mediante la clase `Outputable`
+- `GHC.Parser` — `parseModule` function, the parser entry point
+- `GHC.Parser.Lexer` — `P` monad, parser state, and parse result (`ParseResult`)
+- `GHC.Data.StringBuffer` — converts a `String` into the buffer consumed by the parser
+- `GHC.Types.SrcLoc` — source code locations
+- `GHC.Hs` — GHC AST types in parsing phase (`GhcPs`)
+- `GHC.Utils.Outputable` — AST pretty-printing through the `Outputable` class
 
 ---
 
-## Requisitos Previos
+## Prerequisites
 
 - **GHC** `9.6.7`
-- **Cabal** `3.10.2.0` o superior
+- **Cabal** `3.10.2.0` or newer
 
-Si no los tenés instalados, usá [GHCup](https://www.haskell.org/ghcup/):
+If you do not have them installed, use [GHCup](https://www.haskell.org/ghcup/):
 
-**Windows:** descargar el instalador desde https://www.haskell.org/ghcup/ y ejecutarlo.
+**Windows:** download the installer from https://www.haskell.org/ghcup/ and run it.
 
-Verificar instalación:
+Verify installation:
 ```bash
-ghc --version    # debe mostrar 9.6.7
-cabal --version  # debe mostrar 3.10.x o superior
+ghc --version    # should show 9.6.7
+cabal --version  # should show 3.10.x or newer
 ```
-## Cómo Ejecutar (paso a paso)
+## How to Run 
 
-> Todos los comandos se ejecutan desde la carpeta `ghc-lib-parser/`.
+> Run all commands from the `ghc-lib-parser/` folder.
 
-**1. Moverse a la carpeta correcta**
+**1. Move to the correct folder**
 ```bash
 cd ghc-lib-parser
 ```
 
-**2. Actualizar el índice de paquetes** _(solo la primera vez)_
+**2. Update the package index** _(only the first time)_
 ```bash
 cabal update
 ```
 
-**3. Compilar y ejecutar** _(la primera compilación tarda varios minutos: ghc-lib-parser es grande)_
+**3. Build and run** _(the first build takes several minutes: ghc-lib-parser is large)_
 ```bash
 cabal run ghc-lib-parser-prueba -- ./Ejemplo.hs
 ```
 
-> **Nota:** `ghc-lib-parser` pesa ~150 MB de código fuente. La primera compilación
-> puede tardar entre 5 y 15 minutos. Las siguientes son instantáneas.
+> **Note:** `ghc-lib-parser` is about ~150 MB of source code. The first build
+> may take between 5 and 15 minutes. Subsequent runs are near-instant.
 
-> **Windows:** se recomienda tener el repositorio en una ruta sin espacios (ej. `C:\Projects\`).
+> **Windows:** it is recommended to keep the repository in a path without spaces for example, `C:\Projects\`.
 
 ---
 
-## Estructura del Proyecto
+## Project Structure
 
 ```
 ghc-lib-parser/
-├── ghc-lib-parser-prueba.cabal   ← definición del proyecto y dependencias
-├── Ejemplo.hs                    ← archivo Haskell de entrada para la prueba
+├── ghc-lib-parser-prueba.cabal    project definition and dependencies
+├── Ejemplo.hs                     input Haskell file for the test
 └── src/
-    └── Main.hs                   ← programa principal
+    └── Main.hs                    main program
 ```
 
 ---
