@@ -1,15 +1,15 @@
 cabal-version:      3.0
-name:               haskell-src-exts-prueba
+name:               haskell-src-exts-test
 version:            0.1.0.0
-synopsis:           Prueba de obtención de AST con haskell-src-exts
+synopsis:           AST extraction test with haskell-src-exts
 description:
-  Proyecto de prueba para el análisis técnico de la librería
-  haskell-src-exts como herramienta para obtener el árbol de
-  análisis sintáctico de código Haskell.
+  Test project for the technical analysis of the
+  haskell-src-exts library as a tool to obtain the
+  syntax tree of Haskell code.
 author:             Saraqch
 maintainer:         quispechoquesara@gmail.com
 
-executable haskell-src-exts-prueba
+executable haskell-src-exts-test
     main-is:          Main.hs
     hs-source-dirs:   src
     default-language: Haskell2010

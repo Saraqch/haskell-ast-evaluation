@@ -19,19 +19,19 @@ Evaluate specialized parsing libraries to select the most suitable tool for extr
 
 ```
 haskell-ast-evaluation/
-├── README.md                        ← this file
+├── README.md                         this file
 │
-├── haskell-src-exts/                ← test with haskell-src-exts
-│   ├── README.md                    ← findings, instructions, conclusions
+├── haskell-src-exts/                 test with haskell-src-exts
+│   ├── README.md                     findings, instructions, conclusions
 │   ├── haskell-src-exts.cabal
-│   ├── Ejemplo.hs
+│   ├── Example.hs
 │   └── src/
 │       └── Main.hs
 │
-└── ghc-lib-parser/                  ← test with ghc-lib-parser (HLS infrastructure)
-    ├── README.md                    ← findings, instructions, conclusions
-    ├── ghc-lib-parser-prueba.cabal
-    ├── Ejemplo.hs
+└── ghc-lib-parser/                   test with ghc-lib-parser (HLS infrastructure)
+    ├── README.md                     findings, instructions, conclusions
+    ├── ghc-lib-parser-test.cabal
+    ├── Example.hs
     └── src/
         └── Main.hs
 ```
@@ -56,7 +56,7 @@ Install with [GHCup](https://www.haskell.org/ghcup/) (recommended):
 ```bash
 cd haskell-src-exts
 cabal update        # first time only
-cabal run haskell-src-exts-prueba -- ./Ejemplo.hs
+cabal run haskell-src-exts-test -- ./Example.hs
 ```
 
 ### Test 2 — ghc-lib-parser
@@ -64,7 +64,7 @@ cabal run haskell-src-exts-prueba -- ./Ejemplo.hs
 ```bash
 cd ghc-lib-parser
 cabal update        # first time only
-cabal run ghc-lib-parser-prueba -- ./Ejemplo.hs
+cabal run ghc-lib-parser-test -- ./Example.hs
 ```
 
 > The first build of `ghc-lib-parser` takes between 5 and 15 minutes

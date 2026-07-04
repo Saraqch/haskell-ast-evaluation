@@ -1,31 +1,31 @@
-# Prueba: haskell-src-exts
+# Test: haskell-src-exts
 
-## Informacion de la Libreria
+## Library Information
 
-| Campo | Detalle |
+| Field | Detail |
 |---|---|
-| **Nombre** | `haskell-src-exts` |
-| **Versión probada** | `1.23.1` |
+| **Name** | `haskell-src-exts` |
+| **Tested version** | `1.23.1` |
 | **Hackage** | https://hackage.haskell.org/package/haskell-src-exts |
-| **Ultima actualizacion** | 21 de Junio del 2026 |
-| **Estado** | Funcional |
+| **Last update** | June 21, 2026 |
+| **Status** | Functional |
 
-## Que hace esta libreria?
+## What does this library do?
 
-haskell-src-exts provee soporte para manipular codigo fuente Haskell. Incluye un lexer, parser, pretty-printer y una definicion completa del AST de Haskell con extensiones.
+haskell-src-exts provides support for manipulating Haskell source code. It includes a lexer, parser, pretty-printer, and a complete Haskell AST definition with extensions.
 
-Modulos principales utilizados:
-- `Language.Haskell.Exts.Parser` - parsea codigo fuente en un AST
-- `Language.Haskell.Exts.Syntax` - define los tipos del arbol sintactico
-- `Language.Haskell.Exts.Pretty` - imprime el AST de vuelta a codigo
+Main modules used:
+- `Language.Haskell.Exts.Parser` - parses source code into an AST
+- `Language.Haskell.Exts.Syntax` - defines syntax tree types
+- `Language.Haskell.Exts.Pretty` - prints the AST back to source code
 
-## Cómo Ejecutar
+## How to Run
 
 ```bash
-# Desde la carpeta raiz del repositorio:
+# From the repository root folder:
 cd haskell-src-exts
 
-cabal update        # solo la primera vez
-cabal run haskell-src-exts-prueba -- Ejemplo.hs
+cabal update        # only the first time
+cabal run haskell-src-exts-test -- ./Example.hs
 ```
 
