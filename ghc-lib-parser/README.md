@@ -73,7 +73,7 @@ cabal run ghc-lib-parser-test -- ./src/Example.hs
 ```
 ghc-lib-parser/
 ├── ghc-lib-parser-test.cabal      project definition and dependencies
-├── Ejemplo.hs                     input Haskell file for the test
+├── Example.hs                     input Haskell file for the test
 └── src/
     └── Main.hs                    main program
 ```
