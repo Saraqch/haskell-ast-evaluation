@@ -1,4 +1,4 @@
-module Ejemplo where
+module Example where
 
-suma :: Int -> Int -> Int
-suma x y = x + y
+add :: Int -> Int -> Int
+add x y = x + y
