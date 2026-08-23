@@ -4,6 +4,20 @@ import Control.Exception (SomeException, try)
 import GHC (runGhc, getSessionDynFlags, setSessionDynFlags, backend, noBackend)
 import GHC.Paths (libdir)
 import System.Directory (canonicalizePath)
+import Control.Monad.IO.Class (liftIO)
+import Data.Maybe (catMaybes)
+import GHC
+  (
+    LoadHowMuch (LoadAllTargets),
+    failed,
+    getModuleGraph,
+    guessTarget,
+    load,
+    mgModSummaries,
+    ml_hs_file,
+    ms_location,
+    setTargets
+  )
 
 module Typechecker
   ( FunTypeInfo (..),
@@ -42,5 +56,31 @@ runAnalysis targetFile = do
     let dflags' = dflags { backend = noBackend}
     _ <- setSessionDynFlags dflags'
 
-    error "Step 3 completed: sesion GHC started"
-    
+  target <- guessTarget canonicalTarget Nothing Nothing
+  setTargets [target]
+
+  loadResult <- load LoadAllTargets
+  if failed loadResult
+    then fail "Could not load target module in GHC"
+    else do 
+      modGrapg <- getModuleGraph
+      let summaries = mgModSummaries modGraph
+      matching <-
+         liftIO $ 
+            mapM 
+              (
+                \sm -> 
+                  case ml_hs_file (ms_location sm) of
+                    Nothing -> return Nothing
+                    Just path -> do
+                      canonical <- canonicalizePath path
+                      return (if canonical == canonicalTarget then Just sm else Nothing)                 
+              )
+              summaries 
+
+      summary <- 
+        case catMaybes matching of
+          sm : _ -> return sm
+          [] -> fail "Could not find ModSummary for target file."
+
+     error "Step 4 completed: sesion GHC started"
