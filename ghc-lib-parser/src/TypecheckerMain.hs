@@ -1,6 +1,6 @@
 module Main where
 
-import System.Enviroment (getArgs)
+import System.Environment (getArgs)
 import Typechecker (analyzeAndTypecheck, inferredFunctions, rawAst, readableAst)
 
 main :: IO ()
@@ -12,7 +12,7 @@ main = do
 
 runTypechecker :: FilePath -> IO ()
 runTypechecker path = do
-  result <- analyzeAndTypechecker path
+  result <- analyzeAndTypecheck path
   case result of
     Left err -> do
       putStrLn "Typechecking error:"
@@ -23,4 +23,4 @@ runTypechecker path = do
       putStrLn "\n2. Simplified AST for reading"
       putStrLn (readableAst report)
       putStrLn "\n3. Inferred top-level function types"
-      mapM_print (inferredFunctions report)
+      mapM_ print (inferredFunctions report)
