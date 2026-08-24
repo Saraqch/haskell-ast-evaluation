@@ -9,9 +9,9 @@ where
 
 import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (catMaybes, mapMaybe)
 import Data.Data (Data)
 import Data.List (sortOn)
+import Data.Maybe (catMaybes, mapMaybe)
 import GHC
   ( LoadHowMuch (LoadAllTargets),
     Module,
@@ -35,20 +35,18 @@ import GHC
     setTargets,
     typecheckModule,
   )
-import GHC.HS.Dump
- (BlankEpAnnotattions (..),
-  BlankSrcSpan (..),
-  showAstData,
-  showAstDataFull,
- )
+import GHC.Hs.Dump
+  ( BlankEpAnnotations (..),
+    BlankSrcSpan (..),
+    showAstData,
+    showAstDataFull,
+  )
 import GHC.Paths (libdir)
-import System.Directory (canonicalizePath)
 import GHC.Types.Id (idName, idType)
 import GHC.Types.Name (Name, getOccString, nameModule_maybe)
 import GHC.Types.TyThing (TyThing (..))
 import GHC.Utils.Outputable (Outputable, ppr, showSDocUnsafe)
 import System.Directory (canonicalizePath)
-
 
 data FunTypeInfo = FunTypeInfo
   { functionName :: String,
@@ -78,14 +76,14 @@ runAnalysis targetFile = do
     let dflags' = dflags {backend = noBackend}
     _ <- setSessionDynFlags dflags'
 
-  target <- guessTarget canonicalTarget Nothing Nothing
-  setTargets [target]
+    target <- guessTarget canonicalTarget Nothing Nothing
+    setTargets [target]
 
-  loadResult <- load LoadAllTargets
-  if failed loadResult
-    then fail "Could not load target module in GHC"
-    else do
-        modGrapg <- getModuleGraph
+    loadResult <- load LoadAllTargets
+    if failed loadResult
+      then fail "Could not load target module in GHC"
+      else do
+        modGraph <- getModuleGraph
         let summaries = mgModSummaries modGraph
         matching <-
           liftIO $
@@ -99,60 +97,60 @@ runAnalysis targetFile = do
               )
               summaries
 
-      summary <-
+        summary <-
           case catMaybes matching of
-            sm -> return sm
+            sm : _ -> return sm
             [] -> fail "Could not find ModSummary for target file."
-        error
 
-      parseMod <- parseModule summary
-      let ast = pm_parsed_source parsedMod
-        rawAstText = renderRawAst ast
-        readableAstText = renderReadableAst ast
+        parsedMod <- parseModule summary
+        let ast = pm_parsed_source parsedMod
+            rawAstText = renderRawAst ast
+            readableAstText = renderReadableAst ast
 
-      typedModule <- typecheckModule parsedMod
-      let currentModule = ms_mod summary 
-        tyThings = modInfoTyThings (moduleInfo typedModule)
-        inferred = extractFuntions currentModule tyThings
+        typedModule <- typecheckModule parsedMod
+        let currentModule = ms_mod summary
+            tyThings = modInfoTyThings (moduleInfo typedModule)
+            inferred = extractFunctions currentModule tyThings
 
-      return 
-        TypecheckReport
-          {
-            rawAst = rawAstText,
-            readableAst = readableAstText,
-            inferredFunctions = inferred
+        return
+          TypecheckReport
+            { rawAst = rawAstText,
+              readableAst = readableAstText,
+              inferredFunctions = inferred
+            }
+
+extractFunctions :: Module -> [TyThing] -> [FunTypeInfo]
+extractFunctions currentModule =
+  sortOn functionName . mapMaybe (toFunType currentModule)
+
+toFunType :: Module -> TyThing -> Maybe FunTypeInfo
+toFunType currentModule (AnId ident)
+  | belongsToCurrentModule && not (isInternalOccName name) =
+      Just
+        FunTypeInfo
+          { functionName = getOccString name,
+            inferredType = renderType (idType ident)
           }
-    
-    extractFunctions :: Module -> [TyThing] -> [FunTypeInfo]
-    extractFunctions currentModule =
-      sortOn functionName . mapMaybe (toFunType currentModule)
+  | otherwise = Nothing
+  where
+    name = idName ident
+    belongsToCurrentModule =
+      case nameModule_maybe name of
+        Just m -> m == currentModule
+        Nothing -> False
+toFunType _ _ = Nothing
 
-    toFunType :: Module -> TyThing -> Maybe FunTypeInfo 
-    toFunType currentModule (AnId ident)
-      | belongsToCurrentModule && not (isInternalOccName name) = 
-            Just 
-              FunTypeInfo
-                {
-                  functionName = getOccString name,
-                  inferredType = renderType (idType ident)
-                }
-      | otherwise = Nothing
-      where 
-        name = idName ident
-        belongsToCurrentModule = 
-          case nameModule_maybe name of 
-            Just m -> m == currentModule
-            Nothing -> False
-    toFunType _ _ = Nothing
+isInternalOccName :: Name -> Bool
+isInternalOccName name =
+  case getOccString name of
+    '$' : _ -> True
+    _ -> False
 
-    isInternalOccName :: Name -> Bool
-    isInternalOccName name = 
-      case getOccString name of 
-        '$' : _ -> True
-        _ -> False
+renderRawAst :: (Data a) => a -> String
+renderRawAst = showSDocUnsafe . showAstDataFull
 
-    renderRawAst :: (Data a) => a -> String
-    renderRawAst = showSDocUnsafe . showAstData BlankSrcSpan BlankEpAnnotations
+renderReadableAst :: (Data a) => a -> String
+renderReadableAst = showSDocUnsafe . showAstData BlankSrcSpan BlankEpAnnotations
 
-    renderType :: (Outputable a) => a -> String
-    renderType = showSDocUnsafe . ppr
+renderType :: (Outputable a) => a -> String
+renderType = showSDocUnsafe . ppr
