@@ -11,7 +11,7 @@ maintainer:         quispechoquesara@gmail.com
 
 executable ghc-lib-parser-test
     main-is:          Main.hs
-    hs-source-dirs:   src
+    hs-source-dirs:   objective1/src
     default-language: Haskell2010
     build-depends:
         base              >= 4.14 && < 5,
@@ -19,16 +19,15 @@ executable ghc-lib-parser-test
         ghc-paths         >= 0.1,
         ghc-lib    == 9.6.7.20250325
 
-executable ghc-lib-typechecker 
-  main-is: TypecheckerMain.hs
-  hs-source-dirs: src
-  other-modules: Typechecker
-  default-language: Haskell2010
-  build-depends:
-    base >= 4.14 && < 5,
-    directory >= 1.3,
-    ghc-paths >= 0.1,
-    ghc-lib == 9.6.7.20250325
-    
+executable ghc-lib-typechecker
+    main-is:          TypecheckerMain.hs
+    hs-source-dirs:   objective2/src
+    other-modules:    Typechecker
+    default-language: Haskell2010
+    build-depends:
+        base              >= 4.14 && < 5,
+        directory         >= 1.3,
+        ghc-paths         >= 0.1,
+        ghc-lib    == 9.6.7.20250325
 
  
