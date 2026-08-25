@@ -15,6 +15,7 @@ import Data.Maybe (catMaybes, mapMaybe)
 import GHC
   ( LoadHowMuch (LoadAllTargets),
     Module,
+    TypecheckedSource,
     backend,
     failed,
     getModuleGraph,
@@ -33,8 +34,10 @@ import GHC
     runGhc,
     setSessionDynFlags,
     setTargets,
+    typecheckedSource,
     typecheckModule,
   )
+import GHC.Hs (GhcPs, HsModule)
 import GHC.Hs.Dump
   ( BlankEpAnnotations (..),
     BlankSrcSpan (..),
@@ -44,6 +47,7 @@ import GHC.Hs.Dump
 import GHC.Paths (libdir)
 import GHC.Types.Id (idName, idType)
 import GHC.Types.Name (Name, getOccString, nameModule_maybe)
+import GHC.Types.SrcLoc (Located)
 import GHC.Types.TyThing (TyThing (..))
 import GHC.Utils.Outputable (Outputable, ppr, showSDocUnsafe)
 import System.Directory (canonicalizePath)
@@ -55,11 +59,12 @@ data FunTypeInfo = FunTypeInfo
   deriving (Show, Eq)
 
 data TypecheckReport = TypecheckReport
-  { rawAst :: String,
+  { parsedAst :: Located (HsModule GhcPs),
+    typedBindings :: TypecheckedSource,
+    rawAst :: String,
     readableAst :: String,
     inferredFunctions :: [FunTypeInfo]
   }
-  deriving (Show)
 
 analyzeAndTypecheck :: FilePath -> IO (Either String TypecheckReport)
 analyzeAndTypecheck targetFile = do
@@ -109,12 +114,15 @@ runAnalysis targetFile = do
 
         typedModule <- typecheckModule parsedMod
         let currentModule = ms_mod summary
+            bindings = typecheckedSource typedModule
             tyThings = modInfoTyThings (moduleInfo typedModule)
             inferred = extractFunctions currentModule tyThings
 
         return
           TypecheckReport
-            { rawAst = rawAstText,
+            { parsedAst = ast,
+              typedBindings = bindings,
+              rawAst = rawAstText,
               readableAst = readableAstText,
               inferredFunctions = inferred
             }
