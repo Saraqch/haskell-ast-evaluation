@@ -1,5 +1,6 @@
 module AstProseGenerator
   ( generateAstProse,
+    generateAstProseWithTypes,
   )
 where
 
@@ -12,11 +13,16 @@ import GHC.Utils.Outputable (Outputable, ppr, showSDocUnsafe)
 -- | Generates a deliberately limited Explicit Source Prose prototype from the
 -- parsed AST only. It does not use name resolution or inferred type information.
 generateAstProse :: HsModule GhcPs -> [String]
-generateAstProse hsModule =
-  concatMap describeLocatedDeclaration (hsmodDecls hsModule)
+generateAstProse = generateAstProseWithTypes (const Nothing)
 
-describeLocatedDeclaration :: LHsDecl GhcPs -> [String]
-describeLocatedDeclaration declaration =
+-- | Generate the same structural prose as 'generateAstProse' and add an
+--   inferred-type sentence only when the supplied lookup finds one.
+generateAstProseWithTypes :: (String -> Maybe String) -> HsModule GhcPs -> [String]
+generateAstProseWithTypes typeForFunction hsModule =
+  concatMap (describeLocatedDeclaration typeForFunction) (hsmodDecls hsModule)
+
+describeLocatedDeclaration :: (String -> Maybe String) -> LHsDecl GhcPs -> [String]
+describeLocatedDeclaration typeForFunction declaration =
   case unLoc declaration of
     SigD _ _ ->
       [ linePrefix declaration
@@ -25,12 +31,27 @@ describeLocatedDeclaration declaration =
           ++ "."
       ]
     ValD _ (FunBind _ name matches) ->
-      concatMap (describeLocatedFunctionMatch (render name)) (unLoc (mg_alts matches))
+      let functionName = render name
+       in describeInferredType declaration functionName typeForFunction
+            ++ concatMap (describeLocatedFunctionMatch functionName) (unLoc (mg_alts matches))
     other ->
       [ linePrefix declaration
           ++ "The declaration "
           ++ quoted (render other)
           ++ " is not expanded by this AST-only prototype."
+      ]
+
+describeInferredType :: LHsDecl GhcPs -> String -> (String -> Maybe String) -> [String]
+describeInferredType declaration functionName typeForFunction =
+  case typeForFunction functionName of
+    Nothing -> []
+    Just inferredType ->
+      [ linePrefix declaration
+          ++ "GHC infers the type "
+          ++ quoted inferredType
+          ++ " for the function "
+          ++ quoted functionName
+          ++ "."
       ]
 
 describeLocatedFunctionMatch :: String -> LMatch GhcPs (LHsExpr GhcPs) -> [String]
