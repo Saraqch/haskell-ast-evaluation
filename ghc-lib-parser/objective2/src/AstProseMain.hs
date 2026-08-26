@@ -1,13 +1,10 @@
 module Main where
 
-import AstProseGenerator (generateAstProse)
+import AstProseGenerator (generateAstProseWithResolvedGuards)
 import GHC.Types.SrcLoc (unLoc)
-import HaskellSourceParser
-  ( ParseFailure (..),
-    ParsedSource (..),
-    parseHaskellFile,
-  )
+import RenamedAstFacts (extractResolvedGuards)
 import System.Environment (getArgs)
+import Typechecker (analyzeAndTypecheck, parsedAst, renamedAst)
 
 main :: IO ()
 main = do
@@ -18,13 +15,13 @@ main = do
 
 explainFile :: FilePath -> IO ()
 explainFile path = do
-  result <- parseHaskellFile path
+  result <- analyzeAndTypecheck path
   case result of
-    Left failure -> do
-      putStrLn $ "Input file: " ++ failedFilePath failure
-      putStrLn "Parse error:"
-      putStrLn (parseFailureMessage failure)
-    Right source -> do
-      putStrLn $ "Input file: " ++ sourceFilePath source
+    Left err -> do
+      putStrLn "Analysis error:"
+      putStrLn err
+    Right report -> do
+      let resolvedGuards = maybe [] extractResolvedGuards (renamedAst report)
+      putStrLn $ "Input file: " ++ path
       putStrLn "\nAST-only explanatory prose:"
-      mapM_ putStrLn (generateAstProse (unLoc (parsedModule source)))
+      mapM_ putStrLn (generateAstProseWithResolvedGuards resolvedGuards (unLoc (parsedAst report)))

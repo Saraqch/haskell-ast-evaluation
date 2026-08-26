@@ -3,8 +3,10 @@ module Main where
 import AstProseGenerator (generateAstProseWithTypes)
 import Data.List (find)
 import GHC.Types.SrcLoc (unLoc)
+import RenamedAstFacts (extractResolvedGuards)
 import System.Environment (getArgs)
-import Typechecker (analyzeAndTypecheck, inferredFunctions, parsedAst, typedBindings)
+import Typechecker (analyzeAndTypecheck, inferredFunctions, parsedAst, renamedAst, typedBindings)
+import TypeProseGenerator (describeInferredFunctionType)
 import qualified TypedAstFacts
 
 main :: IO ()
@@ -23,10 +25,15 @@ explainFileWithTypes path = do
       putStrLn err
     Right report -> do
       let facts = TypedAstFacts.extractTypedFunctionFacts (typedBindings report) (inferredFunctions report)
+          resolvedGuards = maybe [] extractResolvedGuards (renamedAst report)
       putStrLn "AST and type-enriched explanatory prose:"
-      mapM_ putStrLn (generateAstProseWithTypes (typeForFunction facts) (unLoc (parsedAst report)))
+      mapM_ putStrLn (generateAstProseWithTypes (typeProseForFunction facts) resolvedGuards (unLoc (parsedAst report)))
 
-typeForFunction :: [TypedAstFacts.TypedFunctionFact] -> String -> Maybe String
-typeForFunction facts functionName =
-  TypedAstFacts.typedFunctionType
-    <$> find ((== functionName) . TypedAstFacts.typedFunctionName) facts
+typeProseForFunction :: [TypedAstFacts.TypedFunctionFact] -> String -> [String]
+typeProseForFunction facts functionName =
+  case find ((== functionName) . TypedAstFacts.typedFunctionName) facts of
+    Nothing -> []
+    Just fact ->
+      describeInferredFunctionType
+        (TypedAstFacts.typedFunctionName fact)
+        (TypedAstFacts.typedFunctionType fact)

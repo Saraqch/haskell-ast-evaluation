@@ -15,6 +15,7 @@ import Data.Maybe (catMaybes, mapMaybe)
 import GHC
   ( LoadHowMuch (LoadAllTargets),
     Module,
+    RenamedSource,
     TypecheckedSource,
     backend,
     failed,
@@ -32,6 +33,7 @@ import GHC
     parseModule,
     pm_parsed_source,
     runGhc,
+    renamedSource,
     setSessionDynFlags,
     setTargets,
     typecheckedSource,
@@ -60,6 +62,7 @@ data FunTypeInfo = FunTypeInfo
 
 data TypecheckReport = TypecheckReport
   { parsedAst :: Located (HsModule GhcPs),
+    renamedAst :: Maybe RenamedSource,
     typedBindings :: TypecheckedSource,
     rawAst :: String,
     readableAst :: String,
@@ -121,6 +124,7 @@ runAnalysis targetFile = do
         return
           TypecheckReport
             { parsedAst = ast,
+              renamedAst = renamedSource typedModule,
               typedBindings = bindings,
               rawAst = rawAstText,
               readableAst = readableAstText,
