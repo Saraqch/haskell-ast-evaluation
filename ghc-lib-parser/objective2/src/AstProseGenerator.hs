@@ -1,7 +1,7 @@
 module AstProseGenerator
   ( generateAstProse,
     generateAstProseWithResolvedGuards,
-    generateAstProseWithTypes,
+    sourceSignatureFunctionNames,
   )
 where
 
@@ -16,34 +16,20 @@ import RenamedAstFacts (ResolvedGuard (..))
 -- | Generates a deliberately limited Explicit Source Prose prototype from the
 -- parsed AST only. It does not use name resolution or inferred type information.
 generateAstProse :: HsModule GhcPs -> [String]
-generateAstProse = generateAstProseWithTypes (const []) []
+generateAstProse = generateAstProseWithResolvedGuards []
 
 -- | Generate AST-only prose using fixity-resolved guard facts when available.
 generateAstProseWithResolvedGuards :: [ResolvedGuard] -> HsModule GhcPs -> [String]
-generateAstProseWithResolvedGuards = generateAstProseWithTypes (const [])
+generateAstProseWithResolvedGuards resolvedGuards hsModule =
+  concatMap (describeLocatedDeclaration resolvedGuards) (hsmodDecls hsModule)
 
--- | Generate the same structural prose as 'generateAstProse' and add an
---   inferred-type prose only when the supplied lookup provides it.
-generateAstProseWithTypes :: (String -> [String]) -> [ResolvedGuard] -> HsModule GhcPs -> [String]
-generateAstProseWithTypes typeForFunction resolvedGuards hsModule =
-  concatMap
-    (describeLocatedDeclaration declaredFunctionNames typeForFunction resolvedGuards)
-    (hsmodDecls hsModule)
-  where
-    declaredFunctionNames = concatMap signatureFunctionNames (hsmodDecls hsModule)
-
-describeLocatedDeclaration :: [String] -> (String -> [String]) -> [ResolvedGuard] -> LHsDecl GhcPs -> [String]
-describeLocatedDeclaration declaredFunctionNames typeForFunction resolvedGuards declaration =
+describeLocatedDeclaration :: [ResolvedGuard] -> LHsDecl GhcPs -> [String]
+describeLocatedDeclaration resolvedGuards declaration =
   case unLoc declaration of
     SigD _ signature -> describeTypeSignature declaration signature
     ValD _ (FunBind _ name matches) ->
       let functionName = render name
-          inferredType =
-            if functionName `elem` declaredFunctionNames
-              then []
-              else typeForFunction functionName
-       in describeInferredType declaration functionName inferredType
-            ++ concatMap (describeLocatedFunctionMatch functionName resolvedGuards) (unLoc (mg_alts matches))
+       in concatMap (describeLocatedFunctionMatch functionName resolvedGuards) (unLoc (mg_alts matches))
     other ->
       [ linePrefix declaration
           ++ "The declaration "
@@ -51,14 +37,14 @@ describeLocatedDeclaration declaredFunctionNames typeForFunction resolvedGuards 
           ++ " is not expanded by this AST-only prototype."
       ]
 
+sourceSignatureFunctionNames :: HsModule GhcPs -> [String]
+sourceSignatureFunctionNames = concatMap signatureFunctionNames . hsmodDecls
+
 signatureFunctionNames :: LHsDecl GhcPs -> [String]
 signatureFunctionNames declaration =
   case unLoc declaration of
     SigD _ (TypeSig _ names _) -> map render names
     _ -> []
-
-describeInferredType :: LHsDecl GhcPs -> String -> [String] -> [String]
-describeInferredType declaration _ = map (\sentence -> linePrefix declaration ++ sentence)
 
 describeTypeSignature :: LHsDecl GhcPs -> Sig GhcPs -> [String]
 describeTypeSignature declaration (TypeSig _ [locatedName] signature) =
@@ -187,12 +173,12 @@ describeGuardExpression (HsVar _ name)
 describeGuardExpression expression = structuredExpression expression
 
 describeArgumentPatterns :: String -> [LPat GhcPs] -> [String]
+describeArgumentPatterns _ [] = []
 describeArgumentPatterns prefix patterns =
-  zipWith describeArgumentPattern [1 :: Int ..] patterns
+  (prefix ++ "when:") : zipWith describeArgumentPattern [1 :: Int ..] patterns
   where
     describeArgumentPattern position pattern' =
-      prefix
-        ++ "The "
+      "  The "
         ++ ordinal position
         ++ " argument matches the pattern "
         ++ quoted (render pattern')
