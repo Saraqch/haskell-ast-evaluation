@@ -20,58 +20,36 @@ executable ghc-lib-parser-test
         ghc-paths         >= 0.1,
         ghc-lib    == 9.6.7.20250325
 
-executable ghc-lib-typechecker
-    main-is:          TypecheckerMain.hs
-    hs-source-dirs:   objective2/src
-    other-modules:    Typechecker
-    default-language: Haskell2010
-    build-depends:
-        base              >= 4.14 && < 5,
-        directory         >= 1.3,
-        ghc-paths         >= 0.1,
-        ghc-lib    == 9.6.7.20250325
-
 executable ghc-lib-ast-prose
-    main-is:          AstProseMain.hs
-    hs-source-dirs:   objective2/src
+    main-is:          AstOnlyProseMain.hs
+    hs-source-dirs:   objective2/app objective2/src
     other-modules:
-        AstProseGenerator
-        RenamedAstFacts
-        Typechecker
+        Analysis.RenamedAstFacts
+        Analysis.Typechecker
+        Prose.AstProseGenerator
     default-language: Haskell2010
     build-depends:
         base              >= 4.14 && < 5,
         directory         >= 1.3,
         ghc-paths         >= 0.1,
-        ghc-lib    == 9.6.7.20250325
-
-executable ghc-lib-typed-ast-inspector
-    main-is:          TypedAstInspectorMain.hs
-    hs-source-dirs:   objective2/src
-    other-modules:
-        Typechecker
-        TypedAstFacts
-    default-language: Haskell2010
-    build-depends:
-        base              >= 4.14 && < 5,
-        directory         >= 1.3,
-        ghc-paths         >= 0.1,
+        prettyprinter     >= 1.7 && < 2,
         ghc-lib    == 9.6.7.20250325
 
 executable ghc-lib-typed-ast-prose
-    main-is:          TypedAstProseMain.hs
-    hs-source-dirs:   objective2/src
+    main-is:          TypeEnrichedProseMain.hs
+    hs-source-dirs:   objective2/app objective2/src
     other-modules:
-        AstProseGenerator
-        RenamedAstFacts
-        Typechecker
-        TypedAstFacts
-        TypeProseGenerator
+        Analysis.RenamedAstFacts
+        Analysis.Typechecker
+        Analysis.TypedAstFacts
+        Prose.AstProseGenerator
+        Prose.TypeProseGenerator
     default-language: Haskell2010
     build-depends:
         base              >= 4.14 && < 5,
         directory         >= 1.3,
         ghc-paths         >= 0.1,
+        prettyprinter     >= 1.7 && < 2,
         ghc-lib    == 9.6.7.20250325
 
  
