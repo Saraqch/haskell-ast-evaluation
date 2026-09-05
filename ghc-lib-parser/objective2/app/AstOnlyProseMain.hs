@@ -28,7 +28,6 @@ explainAstOnly path = do
       let resolvedGuards = maybe [] extractResolvedGuards (renamedAst report)
           astProse = generateAstProseWithResolvedGuards resolvedGuards (unLoc (parsedAst report))
       putStrLn ("Input file: " <> path)
-      putStrLn "\nAST-only structural explanatory prose:"
       putStrLn (renderProse astProse)
 
 renderProse :: Doc ann -> String
