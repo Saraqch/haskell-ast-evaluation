@@ -37,14 +37,12 @@ explainWithTypes path = do
           declaredFunctions = sourceSignatureFunctionNames parsedModule
           inferredFacts = filter ((`notElem` declaredFunctions) . TypedAstFacts.typedFunctionName) typedFacts
       putStrLn ("Input file: " <> path)
-      putStrLn "\nType-enriched structural explanatory prose:"
       if null inferredFacts
         then do
           printStructuralProse astProse
           putStrLn "\nAdditional static type information inferred by GHC:"
           printTypeEnrichedInformation declaredFunctions inferredFacts
         else do
-          putStrLn "\nInferred function declaration from GHC:"
           printTypeEnrichedInformation declaredFunctions inferredFacts
           printStructuralProse astProse
 
@@ -52,9 +50,7 @@ renderProse :: Doc ann -> String
 renderProse = renderString . layoutPretty defaultLayoutOptions
 
 printStructuralProse :: Doc ann -> IO ()
-printStructuralProse astProse = do
-  putStrLn "\nStructural explanatory prose derived from the parsed AST:"
-  putStrLn (renderProse astProse)
+printStructuralProse = putStrLn . renderProse
 
 printTypeEnrichedInformation :: [String] -> [TypedAstFacts.TypedFunctionFact] -> IO ()
 printTypeEnrichedInformation declaredFunctions []

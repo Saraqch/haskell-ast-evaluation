@@ -1,6 +1,6 @@
 module NumericOperators where
 
-processValues x y = (x * y) + 2
+processValues x y = x * y + 2
 
 
 
