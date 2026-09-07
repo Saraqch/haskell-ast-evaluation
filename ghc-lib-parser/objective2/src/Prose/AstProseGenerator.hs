@@ -212,9 +212,45 @@ describeArgumentPattern :: Int -> LPat GhcPs -> Doc ann
 describeArgumentPattern position pattern' =
   pretty "The"
     <+> ordinal position
-    <+> pretty "argument matches the pattern"
-    <+> quoted (renderText pattern')
+    <+> pretty "argument matches"
+    <+> describePattern pattern'
     <> pretty "."
+
+-- | Translate the list-pattern forms that have a direct, beginner-oriented
+-- meaning. Other patterns retain their source representation.
+describePattern :: LPat GhcPs -> Doc ann
+describePattern pattern' =
+  case unLoc pattern' of
+    ListPat _ [] -> pretty "the empty list"
+    ParPat _ _ nestedPattern _ -> describePattern nestedPattern
+    ConPat {pat_con = constructor, pat_args = PrefixCon _ []}
+      | renderText constructor == "[]" -> pretty "the empty list"
+    ConPat {pat_con = constructor, pat_args = InfixCon headPattern tailPattern}
+      | renderText constructor `elem` [":", "(:)"] ->
+          pretty "a non-empty list whose head matches"
+            <+> quoted (renderText headPattern)
+            <+> describeListTail tailPattern
+    _ -> pretty "the pattern" <+> quoted (renderText pattern')
+
+describeListTail :: LPat GhcPs -> Doc ann
+describeListTail tailPattern
+  | isWildcardPattern tailPattern = pretty "and whose tail is ignored"
+  | otherwise =
+      pretty "and whose tail matches"
+        <+> describeTailPattern tailPattern
+
+describeTailPattern :: LPat GhcPs -> Doc ann
+describeTailPattern tailPattern =
+  case unLoc tailPattern of
+    VarPat _ name -> quoted (renderText name)
+    _ -> describePattern tailPattern
+
+isWildcardPattern :: LPat GhcPs -> Bool
+isWildcardPattern pattern' =
+  case unLoc pattern' of
+    WildPat _ -> True
+    ParPat _ _ nestedPattern _ -> isWildcardPattern nestedPattern
+    _ -> False
 
 ordinal :: Int -> Doc ann
 ordinal 1 = pretty "first"
@@ -263,7 +299,7 @@ describeCaseAlternative prefix match =
   where
     patternDescription =
       case m_pats match of
-        [pattern'] -> pretty "the pattern" <+> quoted (renderText pattern')
+        [pattern'] -> describePattern pattern'
         patterns -> pretty "the patterns" <+> commaSeparatedDocs (map (quoted . renderText) patterns)
     GRHSs _ guardedRhss _ = m_grhss match
 
