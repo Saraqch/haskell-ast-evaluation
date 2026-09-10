@@ -25,12 +25,9 @@ import Prettyprinter
   )
 import Analysis.RenamedAstFacts (ResolvedGuard (..))
 
--- | Generates a deliberately limited Explicit Source Prose prototype from the
--- parsed AST only. It does not include inferred type information.
 generateAstProse :: HsModule GhcPs -> Doc ann
 generateAstProse = generateAstProseWithResolvedGuards []
 
--- | Generate AST-only prose using fixity-resolved guard facts when available.
 generateAstProseWithResolvedGuards :: [ResolvedGuard] -> HsModule GhcPs -> Doc ann
 generateAstProseWithResolvedGuards resolvedGuards hsModule =
   vcat (map (describeLocatedDeclaration resolvedGuards) (hsmodDecls hsModule))
@@ -216,8 +213,6 @@ describeArgumentPattern position pattern' =
     <+> describePattern pattern'
     <> pretty "."
 
--- | Translate the list-pattern forms that have a direct, beginner-oriented
--- meaning. Other patterns retain their source representation.
 describePattern :: LPat GhcPs -> Doc ann
 describePattern pattern' =
   case unLoc pattern' of
@@ -352,8 +347,6 @@ describeExpression (HsVar _ name) = pretty "the identifier" <+> quoted (renderTe
 describeExpression expression@(HsOverLit _ _) = pretty "the literal value" <+> quoted (renderText expression)
 describeExpression expression = pretty "the source expression" <+> quoted (renderText expression)
 
--- | Render a source-like expression while making each nested operator group
--- explicit and visually nested.
 structuredExpression :: HsExpr GhcPs -> Doc ann
 structuredExpression (HsPar _ _ expression _) = structuredExpression (unLoc expression)
 structuredExpression (OpApp _ left operator right) =

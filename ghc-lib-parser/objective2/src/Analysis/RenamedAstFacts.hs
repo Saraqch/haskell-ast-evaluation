@@ -13,7 +13,6 @@ import GHC.Types.Name (getOccString)
 import GHC.Types.SrcLoc (srcSpanStartLine, unLoc)
 import GHC.Utils.Outputable (Outputable, ppr, showSDocUnsafe)
 
--- | A guard and right-hand expression after GHC has resolved infix fixities.
 data ResolvedGuard = ResolvedGuard
   { resolvedGuardLine :: Int,
     resolvedCondition :: String,

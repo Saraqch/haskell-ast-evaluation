@@ -13,8 +13,6 @@ import Prose.AstProseGenerator
 import Prose.TypeProseGenerator (describeInferredFunctionType)
 import System.Environment (getArgs)
 
--- | Official type-enriched entry point for Objective 2. It preserves the
--- structural prose and adds available static type facts inferred by GHC.
 main :: IO ()
 main = do
   args <- getArgs

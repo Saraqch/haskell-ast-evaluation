@@ -8,8 +8,6 @@ import Prettyprinter.Render.String (renderString)
 import Prose.AstProseGenerator (generateAstProseWithResolvedGuards)
 import System.Environment (getArgs)
 
--- | Official AST-only entry point for Objective 2. The generated prose does
--- not include facts inferred from GHC's typechecker.
 main :: IO ()
 main = do
   args <- getArgs

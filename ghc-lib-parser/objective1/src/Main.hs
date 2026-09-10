@@ -2,9 +2,6 @@
 
 module Main where
 
--- ghc-lib-parser 9.6.7.20250325
--- AST extraction test using the real GHC parser
-
 import Data.Data (Data)
 import GHC.Hs
 import GHC.Hs.Dump (BlankEpAnnotations (..), BlankSrcSpan (..), showAstData, showAstDataFull)

@@ -12,16 +12,12 @@ import GHC.Types.Name (getOccString)
 import GHC.Types.SrcLoc (unLoc)
 import Analysis.Typechecker (FunTypeInfo (..))
 
--- | A student-readable fact about a function found in the typed AST.
 data TypedFunctionFact = TypedFunctionFact
   { typedFunctionName :: String,
     typedFunctionType :: String
   }
   deriving (Show, Eq)
 
--- | Traverse the typechecked bindings to find user-defined functions, then attach
---   GHC's generalized module-interface type for each one. The latter preserves
---   constraints such as @Num a =>@ that are absent from GHC's local binders.
 extractTypedFunctionFacts :: TypecheckedSource -> [FunTypeInfo] -> [TypedFunctionFact]
 extractTypedFunctionFacts bindings inferredFunctions =
   sortOn typedFunctionName

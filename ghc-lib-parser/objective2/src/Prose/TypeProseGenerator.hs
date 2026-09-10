@@ -5,8 +5,6 @@ where
 
 import Data.List (stripPrefix)
 
--- | Translate selected inferred function-type patterns into student-oriented
---   prose. The technical type is retained as traceable supporting evidence.
 describeInferredFunctionType :: String -> String -> [String]
 describeInferredFunctionType functionName rawType =
   [ explanatorySentence functionName normalizedType,
