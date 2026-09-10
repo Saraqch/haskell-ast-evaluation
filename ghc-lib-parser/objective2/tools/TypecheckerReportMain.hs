@@ -1,14 +1,14 @@
 module Main where
 
 import System.Environment (getArgs)
-import Typechecker (analyzeAndTypecheck, inferredFunctions, rawAst, readableAst)
+import Analysis.Typechecker (analyzeAndTypecheck, inferredFunctions, rawAst, readableAst)
 
 main :: IO ()
 main = do
   args <- getArgs
   case args of
     [path] -> runTypechecker path
-    _ -> putStrLn "Usage: cabal run ghc-lib-typechecker  -- path/to/file.hs"
+    _ -> putStrLn "Usage: run this diagnostic with a Haskell source-file path."
 
 runTypechecker :: FilePath -> IO ()
 runTypechecker path = do
