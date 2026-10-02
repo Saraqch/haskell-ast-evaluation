@@ -4,6 +4,7 @@ module HaskellSourceParser
   ( ParseFailure (..),
     ParsedSource (..),
     parseHaskellFile,
+    parseHaskellSource,
   )
 where
 
@@ -38,7 +39,10 @@ parseHaskellFile :: FilePath -> IO (Either ParseFailure ParsedSource)
 parseHaskellFile inputPath = do
   absolutePath <- canonicalizePath inputPath
   content <- readFile absolutePath
+  return (parseHaskellSource absolutePath content)
 
+parseHaskellSource :: FilePath -> String -> Either ParseFailure ParsedSource
+parseHaskellSource sourcePath content =
   let opts =
         mkParserOpts
           EnumSet.empty
@@ -49,24 +53,21 @@ parseHaskellFile inputPath = do
           False
           False
       buffer = stringToStringBuffer content
-      loc = mkRealSrcLoc (mkFastString absolutePath) 1 1
+      loc = mkRealSrcLoc (mkFastString sourcePath) 1 1
       parserState = initParserState opts buffer loc
-
-  case unP parseModule parserState of
-    PFailed parserState' ->
-      return $
-        Left
-          ParseFailure
-            { failedFilePath = absolutePath,
-              parseFailureMessage = render (getPsErrorMessages parserState')
-            }
-    POk _ ast ->
-      return $
-        Right
-          ParsedSource
-            { sourceFilePath = absolutePath,
-              parsedModule = ast
-            }
+   in case unP parseModule parserState of
+        PFailed parserState' ->
+          Left
+            ParseFailure
+              { failedFilePath = sourcePath,
+                parseFailureMessage = render (getPsErrorMessages parserState')
+              }
+        POk _ ast ->
+          Right
+            ParsedSource
+              { sourceFilePath = sourcePath,
+                parsedModule = ast
+              }
 
 emptyDiagOpts :: DiagOpts
 emptyDiagOpts =

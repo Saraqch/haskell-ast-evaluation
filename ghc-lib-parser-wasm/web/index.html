@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP WASM Benchmark</title>
+<style>
+:root{--ink:#11283a;--muted:#597080;--paper:#f4f7f7;--card:#fff;--line:#d6e1e4;--teal:#087b75;--gold:#e8ae34;--code:#102330;--bad:#b42318}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:auto;padding:24px 16px 48px}
+h1{font-size:1.4rem;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h2{font-size:1rem;margin:0 0 10px}
+textarea{width:100%;min-height:220px;background:var(--code);color:#e7f0f3;border:0;border-radius:10px;padding:12px;font:13px/1.6 ui-monospace,Consolas,monospace}
+pre{white-space:pre-wrap;background:#f7fafa;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:220px;margin:0;font:13px/1.55 ui-monospace,Consolas,monospace;overflow:auto}
+pre.error{color:var(--bad)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0;align-items:center}
+button{font:inherit;border:0;border-radius:9px;padding:9px 13px;font-weight:650;cursor:pointer;background:#eaf0f2;color:var(--ink)}
+button.primary{background:var(--teal);color:#fff}
+button:disabled{opacity:.5;cursor:progress}
+label{font-size:.88rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#eef5f4;border-radius:10px;padding:10px}
+.stat b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:650}
+.status{font-size:.85rem;color:var(--muted)}
+.wide{grid-column:1/-1}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>ESP Haskell · medición WASM</h1>
+  <p class="lead">Mide cuánto tarda el navegador en descargar, compilar y ejecutar por primera vez el motor <code>ghc-lib-parser</code> + prosa compilado a WebAssembly.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Código Haskell</h2>
+      <textarea id="source" spellcheck="false">factorial :: Int -> Int
+factorial n
+  | n <= 1 = 1
+  | otherwise = n * factorial (n - 1)
+
+processValues :: Int -> Int -> Int
+processValues x y = x * y + 2</textarea>
+      <div class="actions">
+        <button class="primary" id="cold">Medición en frío</button>
+        <button id="warm" disabled>Ejecutar de nuevo (caliente)</button>
+        <label><input type="checkbox" id="bypass" checked> Ignorar caché HTTP</label>
+      </div>
+      <p class="status" id="status">Listo. «Medición en frío» crea un Web Worker nuevo y compila el .wasm desde cero.</p>
+    </section>
+
+    <section class="card">
+      <h2>Prosa generada</h2>
+      <pre id="output">(sin ejecutar)</pre>
+    </section>
+
+    <section class="card wide">
+      <h2>Tiempos</h2>
+      <div class="stats">
+        <div class="stat"><b id="s-first">–</b><span>Hasta la primera prosa (mediana, frío)</span></div>
+        <div class="stat"><b id="s-compile">–</b><span>Compilación WASM (mediana)</span></div>
+        <div class="stat"><b id="s-warm">–</b><span>Ejecución en caliente (mediana)</span></div>
+        <div class="stat"><b id="s-size">–</b><span>Tamaño .wasm (transferido)</span></div>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Tipo</th><th>Descarga</th><th>Compilación</th><th>Instanciación</th><th>Ejecución</th><th>Total</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="actions">
+        <button id="csv">Copiar CSV</button>
+        <button id="clear">Limpiar</button>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const WASM_URL = "esp.wasm";
+const $ = (s) => document.querySelector(s);
+const runs = [];
+let worker = null, nextId = 0;
+
+function call(message) {
+  return new Promise((resolve, reject) => {
+    const id = nextId++;
+    const onMessage = ({ data }) => {
+      if (data.id !== id) return;
+      worker.removeEventListener("message", onMessage);
+      data.ok ? resolve(data.result) : reject(new Error(data.error));
+    };
+    worker.addEventListener("message", onMessage);
+    worker.postMessage({ ...message, id });
+  });
+}
+
+const ms = (v) => v == null ? "–" : v < 10 ? v.toFixed(2) + " ms" : Math.round(v) + " ms";
+const kb = (b) => b == null ? "–" : (b / 1024 / 1024).toFixed(2) + " MB";
+const median = (xs) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+function showResult(r) {
+  const out = $("#output");
+  out.classList.toggle("error", r.exitCode !== 0);
+  out.textContent = r.exitCode === 0 ? r.stdout : r.stderr || `Código de salida ${r.exitCode}`;
+}
+
+function render() {
+  $("#rows").innerHTML = runs.map((r, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${r.kind}</td><td>${ms(r.downloadMs)}</td><td>${ms(r.compileMs)}</td><td>${ms(r.instantiateMs)}</td><td>${ms(r.runMs)}</td><td><b>${ms(r.totalMs)}</b></td></tr>`).join("");
+  const cold = runs.filter((r) => r.kind === "frío"), warm = runs.filter((r) => r.kind === "caliente");
+  $("#s-first").textContent = ms(median(cold.map((r) => r.totalMs)));
+  $("#s-compile").textContent = ms(median(cold.map((r) => r.compileMs)));
+  $("#s-warm").textContent = ms(median(warm.map((r) => r.totalMs)));
+  const last = cold.at(-1);
+  if (last) $("#s-size").textContent = `${kb(last.bytes)}` + (last.transferBytes ? ` (${kb(last.transferBytes)})` : "");
+}
+
+function busy(on, text) {
+  $("#cold").disabled = on;
+  $("#warm").disabled = on || !worker;
+  if (text) $("#status").textContent = text;
+}
+
+$("#cold").onclick = async () => {
+  busy(true, "Creando Web Worker y descargando esp.wasm…");
+  if (worker) worker.terminate();
+  const t0 = performance.now();
+  worker = new Worker("worker.js", { type: "module" });
+  try {
+    const load = await call({ type: "load", url: WASM_URL, bypassCache: $("#bypass").checked });
+    $("#status").textContent = "Compilado. Generando prosa…";
+    const run = await call({ type: "explain", source: $("#source").value });
+    const totalMs = performance.now() - t0;
+    runs.push({ kind: "frío", ...load, ...run, totalMs });
+    showResult(run);
+    busy(false, `Primera prosa en ${ms(totalMs)} (incluye arranque del worker e importación del shim WASI).`);
+  } catch (e) {
+    worker.terminate(); worker = null;
+    $("#output").classList.add("error");
+    $("#output").textContent = e.message;
+    busy(false, "Falló la medición. ¿Existe web/esp.wasm? Ejecuta build.sh primero.");
+  }
+  render();
+};
+
+$("#warm").onclick = async () => {
+  busy(true, "Ejecutando con el módulo ya compilado…");
+  const t0 = performance.now();
+  try {
+    const run = await call({ type: "explain", source: $("#source").value });
+    runs.push({ kind: "caliente", ...run, totalMs: performance.now() - t0 });
+    showResult(run);
+    busy(false, "Listo.");
+  } catch (e) {
+    $("#output").textContent = e.message;
+    busy(false, "Falló la ejecución.");
+  }
+  render();
+};
+
+$("#csv").onclick = async () => {
+  const cols = ["kind", "downloadMs", "compileMs", "instantiateMs", "runMs", "totalMs", "bytes", "transferBytes"];
+  const csv = [cols.join(","), ...runs.map((r) => cols.map((c) => r[c] ?? "").join(","))].join("\n")
+    + `\n# ${navigator.userAgent}`;
+  try { await navigator.clipboard.writeText(csv); $("#status").textContent = "CSV copiado."; }
+  catch { $("#status").textContent = "No se pudo copiar; revisa permisos del portapapeles."; }
+};
+
+$("#clear").onclick = () => { runs.length = 0; render(); };
+</script>
+</body>
+</html>

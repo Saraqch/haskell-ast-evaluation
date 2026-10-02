@@ -4,6 +4,7 @@ module Analysis.RenamedAstFacts
   )
 where
 
+import Analysis.ResolvedGuard (ResolvedGuard (..))
 import GHC (RenamedSource)
 import GHC.Data.Bag (bagToList)
 import GHC.Hs
@@ -12,13 +13,6 @@ import GHC.Parser.Annotation (getLocA, realSrcSpan)
 import GHC.Types.Name (getOccString)
 import GHC.Types.SrcLoc (srcSpanStartLine, unLoc)
 import GHC.Utils.Outputable (Outputable, ppr, showSDocUnsafe)
-
-data ResolvedGuard = ResolvedGuard
-  { resolvedGuardLine :: Int,
-    resolvedCondition :: String,
-    resolvedExpression :: String
-  }
-  deriving (Show, Eq)
 
 extractResolvedGuards :: RenamedSource -> [ResolvedGuard]
 extractResolvedGuards (group, _, _, _) =

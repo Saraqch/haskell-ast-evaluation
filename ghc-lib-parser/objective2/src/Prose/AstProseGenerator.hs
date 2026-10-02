@@ -23,7 +23,7 @@ import Prettyprinter
     (<+>),
     (<>),
   )
-import Analysis.RenamedAstFacts (ResolvedGuard (..))
+import Analysis.ResolvedGuard (ResolvedGuard (..))
 
 generateAstProse :: HsModule GhcPs -> Doc ann
 generateAstProse = generateAstProseWithResolvedGuards []

@@ -25,6 +25,7 @@ executable ghc-lib-ast-prose
     hs-source-dirs:   objective2/app objective2/src
     other-modules:
         Analysis.RenamedAstFacts
+        Analysis.ResolvedGuard
         Analysis.Typechecker
         Prose.AstProseGenerator
     default-language: Haskell2010
@@ -40,6 +41,7 @@ executable ghc-lib-typed-ast-prose
     hs-source-dirs:   objective2/app objective2/src
     other-modules:
         Analysis.RenamedAstFacts
+        Analysis.ResolvedGuard
         Analysis.Typechecker
         Analysis.TypedAstFacts
         Prose.AstProseGenerator

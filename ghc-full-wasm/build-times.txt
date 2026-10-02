@@ -1,0 +1,5 @@
+date:              2026-09-25T18:26:35-04:00
+ghc:               The Glorious Glasgow Haskell Compilation System, version 9.14.1.20260731
+build seconds:     194
+rootfs.tar.zst:    62978574 bytes
+rootfs extracted:  310865920 bytes

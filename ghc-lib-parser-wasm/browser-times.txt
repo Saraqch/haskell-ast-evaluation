@@ -1,0 +1,22 @@
+date:      2026-10-02
+browser:   Chromium 152 (Claude desktop browser pane), Windows 10, 12 logical cores
+served:    python -m http.server on 127.0.0.1, web/esp.wasm uncompressed (6558594 bytes), HTTP cache bypassed
+input:     default page example (factorial + processValues)
+columns:   download, compile, instantiate, run, total (ms; total includes worker start and WASI shim import)
+
+1  cold  31  17  7.40  60    412   (first run also fetches browser_wasi_shim from the CDN)
+2  cold  25  13  8.30  28    91
+3  cold  26  16  5.40  26    91
+4  cold  24  17  5.50  28    93
+5  cold  24  14  5.10  27    89
+6  warm  -   -   7.90  8.30  17
+7  warm  -   -   5.50  5.20  11
+8  warm  -   -   10    8.10  19
+9  warm  -   -   5.60  5.00  11
+10 warm  -   -   5.50  5.10  11
+
+median cold total: 91 ms   median compile: 16 ms   median warm total: 11 ms
+
+Same machine and browser, ../ghc-full-wasm (full GHC 9.14.1, rootfs.tar.zst 62978574 bytes):
+page+imports 2335 ms, rootfs download 1268 ms, rootfs extraction 2324 ms, GHC link (dyld) 3546 ms,
+session ready 97 ms -> ready after 9570 ms; compile+run of the hello example 364 / 36 / 27 ms.

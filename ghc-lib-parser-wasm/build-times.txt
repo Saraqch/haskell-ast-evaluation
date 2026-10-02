@@ -1,0 +1,6 @@
+date:            2026-09-25T16:43:38-04:00
+ghc:             The Glorious Glasgow Haskell Compilation System, version 9.6.7.20250206
+build seconds:   480
+raw wasm bytes:  15632283
+opt wasm bytes:  6558594
+gzip wasm bytes: 1736939

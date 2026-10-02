@@ -1,0 +1,10 @@
+packages: .
+
+if arch(wasm32)
+  package ghc-lib-parser
+    -- The WASM backend does not support the threaded RTS.
+    flags: -threaded-rts
+    -- alex/happy run on the build machine, so use the native Linux tools
+    -- instead of the wasm builds that build-tool-depends would produce.
+    alex-location: /usr/bin/alex
+    happy-location: /usr/bin/happy
